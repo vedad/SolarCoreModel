@@ -33,12 +33,12 @@ def opacity(T, rho):
 	diffT = abs(10**(logT) - T)
 	diffR = abs(10**(logR) - R)
 
-	# Finds the index of the minimum difference values, so the most relevant khappa can be used.
+	# Finds the index of the minimum difference values, so the most relevant kappa can be used.
 	i = np.argmin(diffT)
 	j = np.argmin(diffR)
 	
-	khappa = 10**(logK[i,j])
-	return khappa
+	kappa = 10**(logK[i,j])
+	return kappa
 
 
 def energyGeneration(T, rho):
@@ -109,7 +109,7 @@ def energyGeneration(T, rho):
 	epsilon = (Q_pp * r_pp) + (Q_3He3He * r_3He3He) + (Q_3He4He * r_3He4He) + (Q_e7Be *
 			r_e7Be) + (Q_p7Li * r_p7Li) + (Q_p7Be * r_p7Be)
 	
-	epsilon = 1.602e-6 / 6.022e23
+	epsilon = epsilon * (1.602e-6 / 6.022e23)
 	print epsilon
 	return epsilon # Conversion from MeV to ergs for CGS
 
@@ -171,14 +171,14 @@ def dLdm(T, rho):
 	"""
 	return energyGeneration(T, rho)
 
-def dTdm(T, L, r, khappa):
+def dTdm(T, L, r, kappa):
 	"""
 	Calculates the right-hand side of dT/dm.
 	"""
 #	sigma = 5.67e-8			# Units of [W m^-2 K^-4]			SI
 	sigma = 5.67e-5			# Units of [erg cm^-2 s^-1 K^-4]	CGS
 
-	return -3 * khappa * L / (256 * np.pi*np.pi * sigma * r*r*r*r * T*T*T)
+	return -3 * kappa * L / (256 * np.pi*np.pi * sigma * r*r*r*r * T*T*T)
 
 
 def integration(dm):
@@ -225,16 +225,18 @@ def integration(dm):
 
 	for i in range(n-1):
 		print T[i]
-		if r[i] < 0 or L[i] < 0 or m[i] < 0:
+		if m[i] < 0:
+			r[i+1] == 0.
+			L[i+1] == 0.
 			break
 		else:
-			r[i+1] = r[i] - drdm(r[i], rho(T[i], P[i])) * dm
-			P[i+1] = P[i] - dPdm(r[i],m[i]) * dm
-			L[i+1] = L[i] - dLdm(T[i], rho(T[i], P[i])) * dm
-			T[i+1] = T[i] - dTdm(T[i], L[i], r[i], opacity(T[i], rho(T[i], P[i]))) * dm
-			m[i+1] = m[i] - dm
+			r[i+1] = r[i] + drdm(r[i], rho(T[i], P[i])) * dm
+			P[i+1] = P[i] + dPdm(r[i],m[i]) * dm
+			L[i+1] = L[i] + dLdm(T[i], rho(T[i], P[i])) * dm
+			T[i+1] = T[i] + dTdm(T[i], L[i], r[i], opacity(T[i], rho(T[i], P[i]))) * dm
+			m[i+1] = m[i] + dm
 
-	return r, P, L, T, m
+	return r/R0, P/P0, L/L0, T/T0, m/M0
 
 
 #integration(1.39e29)
@@ -249,8 +251,8 @@ def plots():
 	ax_r = fig_r.add_subplot(111)
 
 	ax_r.set_title('$r(m)$')
-	ax_r.set_xlabel('$m$')
-	ax_r.set_ylabel('$r$')
+	ax_r.set_xlabel('$m/M_0$')
+	ax_r.set_ylabel('$r/R_0$')
 	ax_r.plot(m,r)
 	
 	# Plotting P(m)
@@ -258,8 +260,8 @@ def plots():
 	ax_P = fig_P.add_subplot(111)
 
 	ax_P.set_title('$P(m)$')
-	ax_P.set_xlabel('$m$')
-	ax_P.set_ylabel('$P$')
+	ax_P.set_xlabel('$m/M_0$')
+	ax_P.set_ylabel('$P/P_0$')
 	ax_P.plot(m,P)
 
 	# Plotting L(m)
@@ -267,8 +269,8 @@ def plots():
 	ax_L = fig_L.add_subplot(111)
 
 	ax_L.set_title('$L(m)$')
-	ax_L.set_xlabel('$m$')
-	ax_L.set_ylabel('$L$')
+	ax_L.set_xlabel('$m/M_0$')
+	ax_L.set_ylabel('$L/L_0$')
 	ax_L.plot(m,L)
 
 	# Plotting T(m)
@@ -276,8 +278,8 @@ def plots():
 	ax_T = fig_T.add_subplot(111)
 
 	ax_T.set_title('$T(m)$')
-	ax_T.set_xlabel('$m$')
-	ax_T.set_ylabel('$T$')
+	ax_T.set_xlabel('$m/M_0$')
+	ax_T.set_ylabel('$T/T_0$')
 	ax_T.plot(m,T)
 
 	plt.show()
