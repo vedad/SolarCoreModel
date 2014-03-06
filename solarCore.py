@@ -37,7 +37,8 @@ def opacity(T, rho):
 	i = np.argmin(diffT)
 	j = np.argmin(diffR)
 	
-	return 10**(logK[i,j])
+	khappa = 10**(logK[i,j])
+	return khappa
 
 
 def energyGeneration(T, rho):
@@ -68,12 +69,12 @@ def energyGeneration(T, rho):
 	Q_p7Be= 0.137 + 8.367 + 2.995
 
 	### Number densities (n) ###
-	n_p = X * rho /	mu				# Hydrogen
-	n_3He = Y_3 * rho / (3 * mu)	# Helium 3
-	n_4He = Y * rho / (4 * mu)		# Helium 4
-	n_7Be = Z_7Be * rho / (7 * mu)	# Beryllium 7
-	n_e = n_p + 2 * n_4He			# Electron
-	n_7Li = Z_7Li * rho / (7 * mu)	# Lithium 7
+	n_p = X * rho / mu					# Hydrogen
+	n_3He = Y_3 * rho / (3 * mu)		# Helium 3
+	n_4He = Y * rho / (4 * mu)			# Helium 4
+	n_7Be = Z_7Be * rho / (7 * mu)		# Beryllium 7
+	n_e = n_p + 2 * n_4He				# Electron
+	n_7Li = Z_7Li * rho / (7 * mu)		# Lithium 7
 
 	### Reaction rates (lambda) ### Units of reactions per second per cubic cm. [cm^3 s^-1]
 	T9 = T / (1e9)
@@ -82,13 +83,13 @@ def energyGeneration(T, rho):
 			+ 1.09 * T9**(2./3) + 0.938 * T9)
 
 	l_3He3He = 6.04e10 * T9**(-2./3) * np.exp(-12.276 * T9**(-1./3)) * (1 + 0.034 * T9**(1./3) -
-			0.522 * T9**(2./3) - 0.124 * T9 + 0.353 * T9**(4./3) + 0.213 * T9**(-5./3))
+			0.522 * T9**(2./3) - 0.124 * T9 + 0.353 * T9**(4./3) + 0.213 * T9**(5./3))
 
 	a = 1 + 0.0495 * T9 # Defined for efficiency in l_3He4He
 	l_3He4He = 5.61e6 * a**(-5./6) * T9**(-2./3) * np.exp(-12.826 * a**(1./3) * T9**(-1./3))
 
 	l_e7Be = 1.34e-10 * T9**(-1./2) * (1 - 0.537 * T9**(1./3) + 3.86 * T9**(2./3)\
-			+ 0.0027 * T9**(-1) * np.exp(2.515e-3 / T9))
+			+ 0.0027 * T9**(-1.) * np.exp(2.515e-3 / T9))
 
 	a = 1 + 0.759 * T9 # Defined for efficiency in l_p7Li
 	l_p7Li = 1.096e9 * T9**(-2./3) * np.exp(-8.472 * T9**(-1./3)) - 4.830e8 * a**(-5./6)\
@@ -107,8 +108,10 @@ def energyGeneration(T, rho):
 	### Energy generation per unit mass from PP I, II and III ###
 	epsilon = (Q_pp * r_pp) + (Q_3He3He * r_3He3He) + (Q_3He4He * r_3He4He) + (Q_e7Be *
 			r_e7Be) + (Q_p7Li * r_p7Li) + (Q_p7Be * r_p7Be)
-
-	return epsilon
+	
+	epsilon = 1.602e-6 / 6.022e23
+	print epsilon
+	return epsilon # Conversion from MeV to ergs for CGS
 
 def rho(T, P):
 	"""
@@ -144,7 +147,6 @@ def rho(T, P):
 
 	# Average molecular weight
 	mu = 1./(2 * X + 3. / 4 * Y + Z / 2)
-	print mu
 
 	rho = mu * m_u / (k * T) * (P - a/3. * T*T*T*T)
 	return rho
@@ -176,10 +178,10 @@ def dTdm(T, L, r, khappa):
 #	sigma = 5.67e-8			# Units of [W m^-2 K^-4]			SI
 	sigma = 5.67e-5			# Units of [erg cm^-2 s^-1 K^-4]	CGS
 
-	return -3 * k * L / (256 * np.pi*np.pi * sigma * r*r*r*r * T*T*T)
+	return -3 * khappa * L / (256 * np.pi*np.pi * sigma * r*r*r*r * T*T*T)
 
 
-def integration(T, rho, khappa, dm):
+def integration(dm):
 	"""
 	Function that integrates the equation governing
 	the internal structure of the radiative core
@@ -205,32 +207,82 @@ def integration(T, rho, khappa, dm):
 	n = int(round(M0 / dm))	# Length of integration arrays
 
 	# Initialising integration arrays
-	m = np.array(n)
+	m = np.zeros(n)
 	m[0] = M0
 
-	r = np.array(n)
+	r = np.zeros(n)
 	r[0] = R0
 
-	P = np.array(n)
+	P = np.zeros(n)
 	P[0] = P0
 
-	L = np.array(n)
+	L = np.zeros(n)
 	L[0] = L0
 
-	T = np.array(n)
+	T = np.zeros(n)
 	T[0] = T0
 
 
-	for i in range(n):
+	for i in range(n-1):
+		print T[i]
 		if r[i] < 0 or L[i] < 0 or m[i] < 0:
 			break
 		else:
-			r[i+1] = r[i] + drdm(r[i], rho(T[i], P[i])) * dm
-			P[i+1] = P[i] + dPdm(r[i+1],m[i]) * dm
-			L[i+1] = L[i] + dLdm(T[i], rho(T[i], P[i])) * dm
-			T[i+1] = T[i] + dTdm(T[i], L[i+1], r[i+1], opacity(T[i], rho[i])) * dm
+			r[i+1] = r[i] - drdm(r[i], rho(T[i], P[i])) * dm
+			P[i+1] = P[i] - dPdm(r[i],m[i]) * dm
+			L[i+1] = L[i] - dLdm(T[i], rho(T[i], P[i])) * dm
+			T[i+1] = T[i] - dTdm(T[i], L[i], r[i], opacity(T[i], rho(T[i], P[i]))) * dm
 			m[i+1] = m[i] - dm
+
+	return r, P, L, T, m
+
+
+#integration(1.39e29)
+
+
+def plots():
+	
+	r, P, L, T, m = integration(1.39e30)
+	
+	# Plotting r(m)
+	fig_r = plt.figure()
+	ax_r = fig_r.add_subplot(111)
+
+	ax_r.set_title('$r(m)$')
+	ax_r.set_xlabel('$m$')
+	ax_r.set_ylabel('$r$')
+	ax_r.plot(m,r)
+	
+	# Plotting P(m)
+	fig_P = plt.figure()
+	ax_P = fig_P.add_subplot(111)
+
+	ax_P.set_title('$P(m)$')
+	ax_P.set_xlabel('$m$')
+	ax_P.set_ylabel('$P$')
+	ax_P.plot(m,P)
+
+	# Plotting L(m)
+	fig_L = plt.figure()
+	ax_L = fig_L.add_subplot(111)
+
+	ax_L.set_title('$L(m)$')
+	ax_L.set_xlabel('$m$')
+	ax_L.set_ylabel('$L$')
+	ax_L.plot(m,L)
+
+	# Plotting T(m)
+	fig_T = plt.figure()
+	ax_T = fig_T.add_subplot(111)
+
+	ax_T.set_title('$T(m)$')
+	ax_T.set_xlabel('$m$')
+	ax_T.set_ylabel('$T$')
+	ax_T.plot(m,T)
+
+	plt.show()
 
 	pass
 
-
+plots()
+	
