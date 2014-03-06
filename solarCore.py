@@ -1,11 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def readOpacity():
+def readOpacity(T, rho):
 	"""
 	Reads opacities from a file. Stores the
 	logarithm of temperature, radius and opacity
-	in separate arrays.
+	in separate arrays. Finds the opacity value
+	that most closely resembles the present values
+	for T and R.
 	"""
 
 	logT = []; logK = []
@@ -22,19 +24,29 @@ def readOpacity():
 		logK.append(line.strip().split()[1:])
 
 	inFile.close()
+	# Converts the array to contain 64 bit floating point numbers
 	logT = np.asarray(logT, dtype=np.float64)
 	logK = np.asarray(logK, dtype=np.float64)
 
-	
-	return logR, logT, logK
+	R = rho / (T / 1e6)	# Definition of R given in the opacity file
 
+	# Make two arrays that contain the difference in T and R from present values
+	diffT = abs(10**(logT) - T)
+	diffR = abs(10**(logR) - R)
+
+	# Finds the index of the minimum difference values, so the most relevant khappa can be used.
+	i = np.argmin(diffT)
+	j = np.argmin(diffR)
 	
+	return 10**(logK[i,j])	# Returns the value of khappa with T and R closest to actual values.
+
+
 def energyGeneration(T, rho):
 	"""
 	Function to find the full energy generation per
 	unit mass from the three PP chain reactions.
 	"""
-	mu = 1 # Choose to use the atomic mass unit
+	mu = 1 # Choose to use the atomic mass unit as unit mass
 
 	# Abundancy of different elements
 	X = 0.7				# Hydrogen (ionized)
@@ -71,13 +83,13 @@ def energyGeneration(T, rho):
 	l_3He3He = 6.04e10 * T9**(-2./3) * np.exp(-12.276 * T9**(-1./3)) * (1 + 0.034 * T9**(1./3) -
 			0.522 * T9**(2./3) - 0.124 * T9 + 0.353 * T9**(4./3) + 0.213 * T9**(-5./3))
 
-	a = 1 + 0.0495 * T9 # Defined for efficiency in l_34
+	a = 1 + 0.0495 * T9 # Defined for efficiency in l_3He4He
 	l_3He4He = 5.61e6 * a**(-5./6) * T9**(-2./3) * np.exp(-12.826 * a**(1./3) * T9**(-1./3))
 
 	l_e7Be = 1.34e-10 * T9**(-1./2) * (1 - 0.537 * T9**(1./3) + 3.86 * T9**(2./3)\
 			+ 0.0027 * T9**(-1) * np.exp(2.515e-3 / T9))
 
-	a = 1 + 0.759 * T9 # Defined for efficiency in l_17Li
+	a = 1 + 0.759 * T9 # Defined for efficiency in l_p7Li
 	l_p7Li = 1.096e9 * T9**(-2./3) * np.exp(-8.472 * T9**(-1./3)) - 4.830e8 * a**(-5./6)\
 	* T9**(-2./3) * np.exp(-8.472 * a**(1./3) * T9**(-1./3))
 
@@ -97,4 +109,31 @@ def energyGeneration(T, rho):
 
 	return epsilon
 
-def 
+def drdm(r, rho):
+	"""
+	Calculates the right-hand side of dr/dm.
+	"""
+	return 1./(4 * np.pi * r * r * rho)
+
+def dPdm(r):
+	"""
+	Calculates the right-hand side of dP/dm.
+	"""
+	G = 6.67e-11	# Units of [N m kg^-2]
+	return - G * m / (4 * np.pi * r * r * r * r)
+
+def dLdm(T, rho):
+	"""
+	Calculates the right-hand side of dL/dm.
+	"""
+	return energyGeneration(T, rho)
+
+def dTdm(T):
+	"""
+	Calculates the right-hand side of dT/dm.
+	"""
+	sigma = 5.67e-8	# Units of [W m^-2 K^-4]
+	return - 3 * k * L / (256 * np.pi*np.pi * sigma * r*r*r*r * T*T*T)
+
+
+
