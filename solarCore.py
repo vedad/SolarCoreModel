@@ -1,4 +1,5 @@
 import numpy as np
+import sys
 import matplotlib.pyplot as plt
 
 def opacity(T, rho):
@@ -55,8 +56,8 @@ def energyGeneration(T, rho):
 	Y = 0.29			# Helium 4 (ionised)
 	Y_3 = 1e-10			# Helium 3 (ionised)
 	Z = 0.01			# Heavier elements than the above
-	Z_7Li = 1e-5		# Lithium 7 (part of Z)
-	Z_7Be = 1e-5		# Beryllium 7 (part of Z)
+	Z_7Li = 1e-13		# Lithium 7 (part of Z)
+	Z_7Be = 1e-13		# Beryllium 7 (part of Z)
 	
 	### Energy values (Q) ###
 	# Energy values of nuclear reactions in PP I [MeV]
@@ -108,9 +109,12 @@ def energyGeneration(T, rho):
 	### Energy generation per unit mass from PP I, II and III ###
 	epsilon = (Q_pp * r_pp) + (Q_3He3He * r_3He3He) + (Q_3He4He * r_3He4He) + (Q_e7Be *
 			r_e7Be) + (Q_p7Li * r_p7Li) + (Q_p7Be * r_p7Be)
+
+	ergs = 1.602e-6	# Conversion from MeV to ergs (CGS)
+	NA = 6.022e23	# Avogadro's constant
 	
-	epsilon = epsilon * (1.602e-6 / 6.022e23)
-	print epsilon
+	epsilon = epsilon * ergs / NA
+#	print epsilon
 	return epsilon # Conversion from MeV to ergs for CGS
 
 def rho(T, P):
@@ -146,9 +150,9 @@ def rho(T, P):
 	a = 4 * sigma / c
 
 	# Average molecular weight
-	mu = 1./(2 * X + 3. / 4 * Y + Z / 2)
+	mu = 1./(2*X + 3./4 * Y + Z/2)
 
-	rho = mu * m_u / (k * T) * (P - a/3. * T*T*T*T)
+	rho = mu * m_u / (k * T) * (P - a/3 * T*T*T*T)
 	return rho
 
 def drdm(r, rho):
@@ -224,19 +228,37 @@ def integration(dm):
 
 
 	for i in range(n-1):
-		print T[i]
-		if m[i] < 0:
-			r[i+1] == 0.
-			L[i+1] == 0.
+#		percent = (i / float(n-1)) * 100
+#		sys.stdout.write('Progress: %4.2f %s\r' % (percent, '%'))
+#		sys.stdout.flush()
+		print rho(T[i],P[i])
+		if m[i] < 0 or r[i] < 0 or L[i] < 0 or rho(T[i], P[i]) < 0 or P[i] < 0:
+#			r[i+1] == 0.
+#			L[i+1] == 0.
 			break
 		else:
-			r[i+1] = r[i] + drdm(r[i], rho(T[i], P[i])) * dm
-			P[i+1] = P[i] + dPdm(r[i],m[i]) * dm
-			L[i+1] = L[i] + dLdm(T[i], rho(T[i], P[i])) * dm
-			T[i+1] = T[i] + dTdm(T[i], L[i], r[i], opacity(T[i], rho(T[i], P[i]))) * dm
-			m[i+1] = m[i] + dm
+			r[i+1] = r[i] - drdm(r[i], rho(T[i], P[i])) * dm
+			P[i+1] = P[i] - dPdm(r[i],m[i]) * dm
+			L[i+1] = L[i] - dLdm(T[i], rho(T[i], P[i])) * dm
+			T[i+1] = T[i] - dTdm(T[i], L[i], r[i], opacity(T[i], rho(T[i], P[i]))) * dm
+			m[i+1] = m[i] - dm
+	
+	"""
+	for i in range(n-1,1):
+		percent = (i / float(n-1)) * 100
+		sys.stdout.write('Progress: %4.2f %s\r' % (percent, '%'))
+		sys.stdout.flush()
+		if m[i] > M0:
+			break
+		else:
+			r[i-1] = r[i] + drdm(r[i], rho(T[i], P[i])) * dm
+			P[i-1] = P[i] + dPdm(r[i],m[i]) * dm
+			L[i-1] = L[i] + dLdm(T[i], rho(T[i], P[i])) * dm
+			T[i-1] = T[i] + dTdm(T[i], L[i], r[i], opacity(T[i], rho(T[i], P[i]))) * dm
+			m[i-1] = m[i] + dm
+	"""
 
-	return r/R0, P/P0, L/L0, T/T0, m/M0
+	return r, P, L, T, m
 
 
 #integration(1.39e29)
@@ -244,7 +266,13 @@ def integration(dm):
 
 def plots():
 	
-	r, P, L, T, m = integration(1.39e30)
+	L0 = 3.839e33			# Units of [erg s^-1]		CGS
+	R0 = 0.5 * 6.96e10		# Units of [cm]				CGS
+	M0 = 0.7 * 1.99e33		# Units of [g]				CGS
+	T0 = 1e5				# Units of [K]				CGS, SI
+	P0 = 1e12				# Units of [Ba]				CGS
+
+	r, P, L, T, m = integration(1.39e29)
 	
 	# Plotting r(m)
 	fig_r = plt.figure()
@@ -253,7 +281,7 @@ def plots():
 	ax_r.set_title('$r(m)$')
 	ax_r.set_xlabel('$m/M_0$')
 	ax_r.set_ylabel('$r/R_0$')
-	ax_r.plot(m,r)
+	ax_r.plot(m/M0,r/R0)
 	
 	# Plotting P(m)
 	fig_P = plt.figure()
@@ -262,7 +290,7 @@ def plots():
 	ax_P.set_title('$P(m)$')
 	ax_P.set_xlabel('$m/M_0$')
 	ax_P.set_ylabel('$P/P_0$')
-	ax_P.plot(m,P)
+	ax_P.plot(m/M0,P/P0)
 
 	# Plotting L(m)
 	fig_L = plt.figure()
@@ -271,7 +299,7 @@ def plots():
 	ax_L.set_title('$L(m)$')
 	ax_L.set_xlabel('$m/M_0$')
 	ax_L.set_ylabel('$L/L_0$')
-	ax_L.plot(m,L)
+	ax_L.plot(m/M0,L/L0)
 
 	# Plotting T(m)
 	fig_T = plt.figure()
@@ -280,7 +308,7 @@ def plots():
 	ax_T.set_title('$T(m)$')
 	ax_T.set_xlabel('$m/M_0$')
 	ax_T.set_ylabel('$T/T_0$')
-	ax_T.plot(m,T)
+	ax_T.plot(m/M0,T/T0)
 
 	plt.show()
 
