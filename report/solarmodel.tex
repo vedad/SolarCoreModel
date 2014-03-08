@@ -1,0 +1,238 @@
+\documentclass[a4paper, 11pt, english]{article}
+%
+% Importering av pakker
+%
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc, url}
+\usepackage[english]{babel}
+\usepackage{textcomp}
+\usepackage{amsmath, amssymb}
+\usepackage{amsbsy, amsfonts}
+\usepackage{graphicx, color}
+\usepackage{parskip} % Space between paragraphs instead of indented text.
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{a4wide} % Smaller margins.
+\usepackage{booktabs} % Functionality for tables.
+\usepackage{lipsum} % Placeholder text
+%
+% Fancy captions
+%
+\usepackage[small,bf]{caption}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+%
+% Algorithms
+%
+\usepackage{algpseudocode}
+\usepackage{algorithm}
+%
+% Subfigure functionality
+%
+\usepackage{caption}
+\usepackage{subcaption}
+%
+% Parametere for inkludering av kode fra fil
+%
+\usepackage{listings}
+\lstset{language=python}
+\lstset{basicstyle=\ttfamily\small}
+\lstset{frame=single}
+\lstset{keywordstyle=\color{red}\bfseries}
+\lstset{commentstyle=\itshape\color{blue}}
+\lstset{showspaces=false}
+\lstset{showstringspaces=false}
+\lstset{showtabs=false}
+\lstset{breaklines}
+\lstset{tabsize=4}
+%
+% Definering av egne kommandoer og miljøer
+%
+\newcommand{\dd}[1]{\ \mathrm{d}#1} % 
+\newcommand{\D}[1]{\ \mathrm{d}#1} % steps in integrals, ex: 4x \D{x} -> 4x dx
+\newcommand{\f}[2]{\frac{#1}{#2}}
+\newcommand{\beq}{\begin{equation*}}
+\newcommand{\eeq}{\end{equation*}}
+
+\newcommand{\refeq}[1]{(\textcolor{red}{\ref{eq:#1}})} % Red color when referencing equations.
+\newcommand{\refig}[1]{\textcolor{blue}{\ref{fig:#1}}} % Blue color when referencing figures.
+\newcommand{\reflst}[1]{(\textcolor{red}{\ref{lst:#1}})}
+\newcommand{\reftab}[1]{\textcolor{blue}{\ref{tab:#1}}} % Blue color when referencing tables.
+
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+
+\newcommand{\course}{AST3310 - Astrophysical plasma and stellar interiors}
+\newcommand{\handIn}{Project 1}
+\newcommand{\projectTitle}{Modeling the solar core}
+
+%
+% Page formatting
+%
+%\pagestyle{fancy}
+%\lhead{Vedad Hodzic}
+%\rhead{}
+%\cfoot{ \thepage\ of \pageref{LastPage} }
+%
+% Navn og tittel
+%
+
+\author{Vedad Hodzic}
+
+\begin{document}
+
+\begin{titlepage}
+    \thispagestyle{empty}
+    \input{frontPage.tex}
+\end{titlepage}
+
+\begin{abstract}
+	I here discuss the properties of the interior of the Sun based on models and
+	simplifications addressed in ~\cite{stix} and ~\cite{gudiksen}. Numerical calculations
+	are used to solve the governing equations of the interior of the Sun. Using the 
+	simplifications, one should expect the temperature to end at $\sim15$ MK. It is found
+	that the results heavily depends on initial properties, and in particular the mass
+	step $\partial m$.
+\end{abstract}
+
+\section{Introduction}
+
+\section{Theory}
+
+The equations that regulate the physical properties of the interior of the Sun are
+expressed as
+%%%
+\begin{align}
+	\frac{\partial r}{\partial m} &= \frac{1}{4\pi r^2 \rho} \label{eq:drdm} \\
+	\frac{\partial P}{\partial m} &= -\frac{Gm}{4\pi r^4} \label{eq:dPdm} \\
+	\frac{\partial L}{\partial m} &= \varepsilon \label{eq:dLdm} \\
+	\frac{\partial T}{\partial m} &= -\frac{3 \kappa L}{256 \pi^2 \sigma r^4 T^3}. 
+	\label{eq:dTdm} 
+\end{align}
+%%%
+The variable $\varepsilon$ in \refeq{dLdm} is the total energy generation per unit mass.
+It is found by looking at the energy generation from nuclear reactions. It depends on the
+abundancy of different elements, temperature and density. The variable $\kappa$ is the
+opacity, which is an average of frequency of photons.
+The pressure in eq. \refeq{dPdm} is a sum of the gas pressure $P_{\mathrm{G}}$, and the radiative
+pressure $P_{\mathrm{R}}$. 
+\begin{align*}
+	P &= P_{\mathrm{G}} + P_{\mathrm{R}} \\
+	P &= \frac{\rho}{\mu m_{\mathrm{u}}} kT + \frac{a}{3}T^4 \\
+	\Rightarrow \rho &= \frac{\mu m_{\mathrm{u}}}{kT} \left( P - \frac{a}{3}T^4 \right),
+\end{align*}
+which yields the density derived from the equation of state. Here, $\mu$ is the average
+molecular weight, $m_{\mathrm{u}}$ is the atomic mass unit and $k$ is the Boltzmann
+constant. The constant $a$ is defined as $a = 4\sigma / c$, where $\sigma$ is the
+Stefan-Boltzmann constant, and $c$ is the speed of light.
+
+The total energy generation per unit mass $\varepsilon$, is found by
+\begin{align}
+	\varepsilon = \sum Q'_{ik} r_{ik},
+	\label{eq:epsilon}
+\end{align}
+where $i,k$ represents two elements, $Q'_{ik}$ is the energy released from the fusion of
+two elements, $r_{ik}$ is the reaction rates per unit mass for two elements. The energies
+$Q'_{ik}$ from the pp chains are listed in ~\cite[p.~39, Table~2.1]{stix}. The reaction
+rates per unit mass is defined by
+\begin{align}
+	r_{ik} = \frac{n_i n_k}{\rho(1 + \delta_{ik})} \lambda_{ik},
+	\label{eq:r}
+\end{align}
+where $n_i,n_k$ is the number density for an element, $\delta_{ik}$ is the Kronecker delta and
+$\lambda_{ik}$ is the reaction rate of a fusion. The number density of an element is
+easily defined as
+\begin{align}
+	n = \frac{\rho \chi_a}{am_{\mathrm{u}}},
+	\label{eq:n}
+\end{align}
+where $\chi$ is the number fraction of an element, and $a$ is the atomic number of the
+element. We denote $X, Y, Z$ to be the number fractions of hydrogen, helium and heavier
+metals, respectively. Finally, the reaction rates $\lambda_{ik}$ for two elements
+$i,k$ can be found in ~\cite[p.~46, Table~2.3]{stix}.
+
+
+\section{The code}
+\subsection{Simplifications}
+
+In order to make a simple model I needed some simplifications. A list of
+assumptions and simplifications follows.
+\begin{itemize}
+	\item[\textbullet] There is no change in the composition of elements as a function of
+		radius. 
+	\item[\textbullet] I assume there is no change in the density of deuterium, so that
+		the rate of destruction of deuterium is the same as the production, and that any
+		reaction involving deuterium happens instantaneous.
+	\item[\textbullet] All nuclear energy comes from the three PP-chains. I have not
+		included the CNO cycle.
+	\item[\textbullet] I assume all elements to be fully inonised.
+\end{itemize}
+
+\subsection{Units}
+
+Given that $\kappa$ is in units of $\left[\mathrm{cm}^2  \ \mathrm{g}^{-1}\right]$,
+$\lambda$ in units of $\left[\mathrm{cm}^3 \ \mathrm{s}^-1 \right]$ and so on,
+I chose to adapt the CGS unit system (centimetre-gram-second). Table \reftab{units} shows
+an overview of the differences.
+\begin{table}
+	\centering
+	\begin{tabular*}{\textwidth}{p{0.25\textwidth}@{\extracolsep{\fill}}p{0.15\textwidth}p{0.15\textwidth}p{0.15\textwidth}p{0.15\textwidth}}
+		\toprule
+		\toprule
+		& \multicolumn{4}{c}{Unit system} \\
+		\cmidrule{2-5}
+		& \multicolumn{2}{c}{CGS} & \multicolumn{2}{c}{SI} \\
+		\cmidrule{2-3}
+		\cmidrule{4-5}
+		Physical property & Unit name & Unit abbr. & Unit name & Unit abbr. \\
+		\midrule
+		Length & centimetre & cm & metre & m \\
+		Weight & gram & g & kilogram & kg \\
+		Time & second & s & second & s \\
+		Temperature & kelvin & K & kelvin & K \\
+		Energy & erg & erg & Joule & J \\
+		Pressure & barye & Ba & pascal & Pa \\
+		\bottomrule
+	\end{tabular*}
+	\caption{Overview of the difference between CGS units and SI units.}
+	\label{tab:units}
+\end{table}
+
+
+\subsection{Structure}
+
+We see from eq. \refeq{dTdm} that $\partial T / \partial m$ depends on the opacity,
+$\kappa$. A table of opacities that correspond to different values of temperature and
+density has been provided. I wrote a function that reads the file and stores values of
+$T$, $R$ and $\kappa$ in separate arrays. Here, $R = R(T, \rho) = \rho / T_6$. The
+function compares the table temperature with the
+actual temperature, and the same with the variable $R$. It returns the $\kappa$ with
+table values of $T$ and $R$ that most closely resembles the present values.
+
+Next, I wrote a function that calculates the energy generation per mass unit from nuclear
+reactions. This means entering the energy releases $Q'_{ik}$ from ~\cite[p.~39,
+Table~2.1]{stix}, the reaction rates $\lambda_{ik}$ from ~\cite[p.~46,
+Table~2.3]{stix} and finding the number densities $n$ for all particles that are involved
+in a nuclear reaction. Given the number fractions $X,Y,Z$ and sub-fractions of these
+for different elements, I was able to calculate the energy generation per mass by using
+eq. \refeq{epsilon}, \refeq{r} and \refeq{n}.
+
+
+
+
+\begin{thebibliography}{9}
+		\bibitem{stix} 
+		Michael Stix,
+		\emph{The Sun}.
+		Springer, New York,
+		2nd Edition,
+		2002.
+
+		\bibitem{gudiksen}
+		Boris Gudiksen
+		\emph{AST3310: Astrophysical plasma and stellar interiors}.
+		2014.
+
+\end{thebibliography}
+
+\end{document}
+

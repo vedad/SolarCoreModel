@@ -1,2 +1,5 @@
 *.swp
 *.txt
+*.aux
+*.log
+*.out
