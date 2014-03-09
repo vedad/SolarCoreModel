@@ -115,11 +115,12 @@ abundancy of different elements, temperature and density. The variable $\kappa$ 
 opacity, which is an average of frequency of photons.
 The pressure in eq. \refeq{dPdm} is a sum of the gas pressure $P_{\mathrm{G}}$, and the radiative
 pressure $P_{\mathrm{R}}$. 
-\begin{align*}
-	P &= P_{\mathrm{G}} + P_{\mathrm{R}} \\
-	P &= \frac{\rho}{\mu m_{\mathrm{u}}} kT + \frac{a}{3}T^4 \\
+\begin{align}
+	P &= P_{\mathrm{G}} + P_{\mathrm{R}} \nonumber \\
+	P &= \frac{\rho}{\mu m_{\mathrm{u}}} kT + \frac{a}{3}T^4 \nonumber \\
 	\Rightarrow \rho &= \frac{\mu m_{\mathrm{u}}}{kT} \left( P - \frac{a}{3}T^4 \right),
-\end{align*}
+	\label{eq:density}
+\end{align}
 which yields the density derived from the equation of state. Here, $\mu$ is the average
 molecular weight, $m_{\mathrm{u}}$ is the atomic mass unit and $k$ is the Boltzmann
 constant. The constant $a$ is defined as $a = 4\sigma / c$, where $\sigma$ is the
@@ -189,7 +190,7 @@ an overview of the differences.
 		Weight & gram & g & kilogram & kg \\
 		Time & second & s & second & s \\
 		Temperature & kelvin & K & kelvin & K \\
-		Energy & erg & erg & Joule & J \\
+		Energy & erg & erg & joule & J \\
 		Pressure & barye & Ba & pascal & Pa \\
 		\bottomrule
 	\end{tabular*}
@@ -216,7 +217,36 @@ in a nuclear reaction. Given the number fractions $X,Y,Z$ and sub-fractions of t
 for different elements, I was able to calculate the energy generation per mass by using
 eq. \refeq{epsilon}, \refeq{r} and \refeq{n}.
 
+I have a function that calculates the density at present time, given the temperature
+$T$ and total pressure $P$. This is found from the equation of state, as given in eq.
+\refeq{density}. This required me to calculate the molecular weight, $\mu$. It is given on
+the form
+\begin{align*}
+	\mu = \frac{1}{\mu}\frac{\rho}{n_{\mathrm{tot}}}.
+\end{align*}
+We can find the total particle density with
+\begin{align*}
+	n_{\mathrm{tot}} &= n_X + n_Y + n_Z + n_e \\
+	&= \frac{X\rho}{m_{\mathrm{u}}} + \frac{Y\rho}{4m_{\mathrm{u}}} +
+	\frac{Z\rho}{Am_{\mathrm{u}}} + \left( \frac{X\rho}{m_{\mathrm{u}}} +
+	\frac{2Y\rho}{4m_{\mathrm{u}}} + \frac{Z\rho}{2m_{\mathrm{u}}} \right),
+\end{align*}
+where $A$ is the average atomic weight of the heavier elements present, which we assume to
+be $A = 7$. This assumption is based on that we only know of two heavier elements present,
+which are $^{7}\mathrm{Be}$ and $^{7}\mathrm{Li}$. We then get
+\begin{align*}
+	\mu &= \frac{\rho m_{\mathrm{u}}}{\rho m_{\mathrm{u}}} \left( \frac{1}{2X +
+		\frac{3}{4}Y + \frac{9}{14}Z} \right) \\
+		&= \frac{1}{2X +\frac{3}{4}Y + \frac{9}{14}Z}.
+\end{align*}
+We have assumed all elements to be fully ionised.
 
+Further, I have four functions that return the right-hand side in eq. \refeq{drdm},
+\refeq{dPdm}, \refeq{dLdm} and \refeq{dTdm}. These are called upon in another function
+that integrates all the equations. For simplicity, I have chosen the forward Euler
+integration scheme as numerical integration method. 
+
+\subsection{The Euler integration scheme}
 
 
 \begin{thebibliography}{9}
