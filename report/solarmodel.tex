@@ -15,6 +15,7 @@
 \usepackage{a4wide} % Smaller margins.
 \usepackage{booktabs} % Functionality for tables.
 \usepackage{lipsum} % Placeholder text
+\usepackage{lmodern}
 %
 % Fancy captions
 %
@@ -35,16 +36,52 @@
 % Parametere for inkludering av kode fra fil
 %
 \usepackage{listings}
-\lstset{language=python}
-\lstset{basicstyle=\ttfamily\small}
-\lstset{frame=single}
-\lstset{keywordstyle=\color{red}\bfseries}
-\lstset{commentstyle=\itshape\color{blue}}
+%\lstset{language=python}
+%\lstset{basicstyle=\ttfamily\small}
+%\lstset{frame=single}
+%\lstset{keywordstyle=\color{red}\bfseries}
+%\lstset{commentstyle=\itshape\color{blue}}
 \lstset{showspaces=false}
 \lstset{showstringspaces=false}
 \lstset{showtabs=false}
 \lstset{breaklines}
 \lstset{tabsize=4}
+%
+% Cool code listing
+%
+\lstdefinestyle{custompython}{
+  belowcaptionskip=1\baselineskip,
+  breaklines=true,
+  frame=L,
+  xleftmargin=\parindent,
+  language=python,
+  showstringspaces=false,
+  basicstyle=\footnotesize\ttfamily,
+  keywordstyle=\bfseries\color{red}\bfseries,
+  commentstyle=\itshape\color{blue},
+  identifierstyle=\color{black},
+  stringstyle=\color{magenta},
+}
+\lstdefinestyle{customasm}{
+  belowcaptionskip=1\baselineskip,
+  frame=L,
+  xleftmargin=\parindent,
+  language=python,
+  basicstyle=\footnotesize\ttfamily,
+  commentstyle=\itshape\color{blue},
+}
+\lstset{escapechar=@,style=custompython}
+%
+% Pseudokode
+%
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{caption}
+\DeclareCaptionFont{white}{\color{white}}
+\DeclareCaptionFormat{listing}{%
+  \parbox{\textwidth}{\colorbox{gray}{\parbox{\textwidth}{#1#2#3}}\vskip-4pt}}
+\captionsetup[lstlisting]{format=listing,labelfont=white,textfont=white}
+\lstset{frame=lrb,xleftmargin=\fboxsep,xrightmargin=-\fboxsep}
 %
 % Definering av egne kommandoer og miljøer
 %
@@ -88,13 +125,22 @@
 \begin{abstract}
 	I here discuss the properties of the interior of the Sun based on models and
 	simplifications addressed in ~\cite{stix} and ~\cite{gudiksen}. Numerical calculations
-	are used to solve the governing equations of the interior of the Sun. Using the 
-	simplifications, one should expect the temperature to end at $\sim15$ MK. It is found
-	that the results heavily depends on initial properties, and in particular the mass
-	step $\partial m$.
+	are used to solve the governing equations of the interior of the Sun.
+	One should expect the luminosity, position and mass to end at zero
+	value simultaneously, while the temperature lies around $\sim15$ MK. It is found
+	that the results heavily depend on initial physical properties, and in some cases on the
+	mass step $\partial m$. Unexpectedly, it is likely the mass step has little to say
+	given the right initial conditions.
 \end{abstract}
 
 \section{Introduction}
+
+There are four differential equations that govern the internal structure of the Sun in our
+model. We apply here numerical methods such as the Euler integration scheme to solve these
+equations. This involves solving equations for nuclear fusion as well as ordinary
+differential equations. We look at how the inner Sun changes based on different initial
+parameters, and try to seek out a set of parameters that leads to the case where mass,
+position and luminosity reach zero value simultaneously. 
 
 \section{Theory}
 
@@ -121,10 +167,31 @@ pressure $P_{\mathrm{R}}$.
 	\Rightarrow \rho &= \frac{\mu m_{\mathrm{u}}}{kT} \left( P - \frac{a}{3}T^4 \right),
 	\label{eq:density}
 \end{align}
-which yields the density derived from the equation of state. Here, $\mu$ is the average
-molecular weight, $m_{\mathrm{u}}$ is the atomic mass unit and $k$ is the Boltzmann
+which yields the density derived from the equation of state. Here, $m_{\mathrm{u}}$ is the
+atomic mass unit and $k$ is the Boltzmann
 constant. The constant $a$ is defined as $a = 4\sigma / c$, where $\sigma$ is the
-Stefan-Boltzmann constant, and $c$ is the speed of light.
+Stefan-Boltzmann constant, and $c$ is the speed of light. The average molecular weight
+$\mu$ is found by
+\begin{align}
+	\mu = \frac{1}{\mu}\frac{\rho}{n_{\mathrm{tot}}}.
+	\label{eq:mu}
+\end{align}
+We can find the total particle density $n_{\mathrm{tot}}$ with
+\begin{align*}
+	n_{\mathrm{tot}} &= n_X + n_Y + n_Z + n_e \\
+	&= \frac{X\rho}{m_{\mathrm{u}}} + \frac{Y\rho}{4m_{\mathrm{u}}} +
+	\frac{Z\rho}{Am_{\mathrm{u}}} + \left( \frac{X\rho}{m_{\mathrm{u}}} +
+	\frac{2Y\rho}{4m_{\mathrm{u}}} + \frac{Z\rho}{2m_{\mathrm{u}}} \right),
+\end{align*}
+where $A$ is the average atomic weight of the heavier elements present, which we assume to
+be $A = 7$. This assumption is based on that we only know of two heavier elements present,
+which are $^{7}\mathrm{Be}$ and $^{7}\mathrm{Li}$. We then get
+\begin{align*}
+	\mu &= \frac{\rho m_{\mathrm{u}}}{\rho m_{\mathrm{u}}} \left( \frac{1}{2X +
+		\frac{3}{4}Y + \frac{9}{14}Z} \right) \\
+		&= \frac{1}{2X +\frac{3}{4}Y + \frac{9}{14}Z},
+\end{align*}
+assuming all elements are fully ionised.
 
 The total energy generation per unit mass $\varepsilon$, is found by
 \begin{align}
@@ -152,7 +219,7 @@ metals, respectively. Finally, the reaction rates $\lambda_{ik}$ for two element
 $i,k$ can be found in ~\cite[p.~46, Table~2.3]{stix}.
 
 
-\section{The code}
+\section{Algorithm}
 \subsection{Simplifications}
 
 In order to make a simple model I needed some simplifications. A list of
@@ -219,35 +286,231 @@ eq. \refeq{epsilon}, \refeq{r} and \refeq{n}.
 
 I have a function that calculates the density at present time, given the temperature
 $T$ and total pressure $P$. This is found from the equation of state, as given in eq.
-\refeq{density}. This required me to calculate the molecular weight, $\mu$. It is given on
-the form
-\begin{align*}
-	\mu = \frac{1}{\mu}\frac{\rho}{n_{\mathrm{tot}}}.
-\end{align*}
-We can find the total particle density with
-\begin{align*}
-	n_{\mathrm{tot}} &= n_X + n_Y + n_Z + n_e \\
-	&= \frac{X\rho}{m_{\mathrm{u}}} + \frac{Y\rho}{4m_{\mathrm{u}}} +
-	\frac{Z\rho}{Am_{\mathrm{u}}} + \left( \frac{X\rho}{m_{\mathrm{u}}} +
-	\frac{2Y\rho}{4m_{\mathrm{u}}} + \frac{Z\rho}{2m_{\mathrm{u}}} \right),
-\end{align*}
-where $A$ is the average atomic weight of the heavier elements present, which we assume to
-be $A = 7$. This assumption is based on that we only know of two heavier elements present,
-which are $^{7}\mathrm{Be}$ and $^{7}\mathrm{Li}$. We then get
-\begin{align*}
-	\mu &= \frac{\rho m_{\mathrm{u}}}{\rho m_{\mathrm{u}}} \left( \frac{1}{2X +
-		\frac{3}{4}Y + \frac{9}{14}Z} \right) \\
-		&= \frac{1}{2X +\frac{3}{4}Y + \frac{9}{14}Z}.
-\end{align*}
-We have assumed all elements to be fully ionised.
+\refeq{density}. This required me to calculate the average molecular weight $\mu$,
+shown in eq. \refeq{mu}.
 
 Further, I have four functions that return the right-hand side in eq. \refeq{drdm},
 \refeq{dPdm}, \refeq{dLdm} and \refeq{dTdm}. These are called upon in another function
-that integrates all the equations. For simplicity, I have chosen the forward Euler
-integration scheme as numerical integration method. 
+that integrates all the equations. I implemented a crude adaptive step system, where I
+changed the mass step gradually while integrating further into the Sun.
 
 \subsection{The Euler integration scheme}
 
+For simplicity, I have chosen the Euler integration scheme to integrate the differential
+equations. Listing \reflst{integration} shows how it is carried out.
+\belowcaptionskip=-10pt
+\begin{lstlisting}[label=lst:integration,caption=Euler integration loop]	
+for i in range(n-1):
+	r[i+1] = r[i] - drdm * dm
+	P[i+1] = P[i] - dPdm * dm
+	L[i+1] = L[i] - dLdm * dm
+	T[i+1] = T[i] - dTdm * dm
+	m[i+1] = m[i] - dm
+\end{lstlisting}
+The Euler method advances one step by adding the previous step value to the current value
+of the right-hand side of the differential equations, multiplied by the mass step.
+Unfortunately, the scheme carries a local truncation error proportional to the step size
+squared, and a global truncation error that is proportional to the step size.
+
+\subsection{Initial conditions}
+Finally, we need a set of initial conditions to initiate the calculations. These are shown
+in Table \reftab{initcond} expressed in the CGS unit system (see Table \reftab{units}).
+\begin{table}
+	\centering
+	\begin{tabular*}{\textwidth}{p{2cm}@{\extracolsep{\fill}}p{2cm}p{2cm}p{2cm}}
+		\toprule
+		\toprule
+		\multicolumn{2}{c}{Physical properties} & \multicolumn{2}{c}{Element abundancies}\\
+		\cmidrule{1-2}
+		\cmidrule{3-4}
+		Parameter & Initial value & Element & Initial value \\
+		\midrule
+		$ L_0 $ & $ L_{\odot} $ & $X$ & 0.7 \\
+		$ R_0 $ & $ 0.5R_{\odot}$ & $Y_3$ & $10^{-10}$ \\
+		$ M_0 $ & $ 0.7M_{\odot}$ & $Y$ & 0.29 \\
+		$\rho_0$ & $1$ g $\mathrm{cm}^{-3}$ & $Z$ & 0.01 \\
+		$ T_0 $ & $ 10^5$ K & $ Z_{^{7}{\mathrm{Li}}} $ & $10^{-5} $ \\
+		$ P_0 $ & $10^{12} $ Ba & $ Z_{^{7}{\mathrm{Be}}} $ & $10^{-5}$ \\
+		\bottomrule
+	\end{tabular*}
+	\caption{Table that shows the initial physical parameters needed in order to initiate the
+	calculations.}
+	\label{tab:initcond}
+\end{table}
+
+
+\section{Results}
+
+\subsection{Using original initial values}
+Carrying out the integrations using the initial conditions shown in Table
+\reftab{initcond}, we get the results shown in Figure \refig{init_results}. As we see from
+these figures, the luminosity reaches zero before the position does, while we have
+integrated through
+just under $0.2 \ \%$ of the initial mass. Figure \refig{temperature_1} shows
+a sudden leap in temperature to start with. This indicates that the initial temperature is
+too low relative to the initial pressure and density. The equation of state tries to
+compensate for this, which leads to a violent increase in temperature. The physical
+parameter that changes abruptly is \emph{probably} determined by the order the differential
+equations are solved. Had we solved them in another order, we would probably see a change.
+\begin{figure}[htpb]
+	\begin{subfigure}{0.49\textwidth}
+		\includegraphics[width=\linewidth]{figures/position_1.eps}
+		\caption{Position}
+		\label{fig:position_1}
+	\end{subfigure}\hfill
+	\begin{subfigure}{0.49\textwidth}
+		\includegraphics[width=\linewidth]{figures/pressure_1.eps}
+		\caption{Pressure}
+		\label{fig:pressure_1}
+	\end{subfigure}\hfill
+	\vspace{0.35cm}
+	\begin{subfigure}{0.49\textwidth}
+		\includegraphics[width=\linewidth]{figures/luminosity_1.eps}
+		\caption{Luminosity}
+		\label{fig:luminosity_1}
+	\end{subfigure}\hfill
+	\begin{subfigure}{0.49\textwidth}
+		\includegraphics[width=\linewidth]{figures/temperature_1.eps}
+		\caption{Temperature}
+		\label{fig:temperature_1}
+	\end{subfigure}
+	\vspace{0.2cm}
+	\caption{Showing results of solving the differential equations using the initial
+		parameters as described in Table \reftab{initcond}.}
+	\label{fig:init_results}
+\end{figure}
+%
+
+\subsection{On the effect of changing $\partial m$}
+
+For some sets of initial conditions, it is important to choose a low $\partial m$ to
+prevent the luminosity or temperature from increasing too quickly. However, this is highly
+time consuming. I chose to adapt a very small (of order $10^{-10}$ of the initial mass)
+step in
+the beginning, while gradually increasing it as we work our way into the core. I noticed
+however that given some initial conditions, I could choose $\partial m$ to be as big as
+$1/100$ of the original mass, and still get identical results as I did in e.g. Figure
+\refig{T1e7_P1e16}. I can only draw the conclusion that $\partial m$ needs to be very
+small if we start with some physical parameters that are too low (or high) compared to
+others, as in the case with Figure \refig{temperature_1}.
+
+\subsection{Decreasing the amount of $^{7}\mathrm{Li}$ and $^{7}\mathrm{Be}$}
+
+As a solution to the temperature problem, we try to lower the number fraction of
+$^{7}\mathrm{Li}$ and $^{7}\mathrm{Be}$. We set $Z_{^{7}\mathrm{Li}} = Z_{^{7}\mathrm{Be}}
+= 10^{-13}$. This should lower the energy generation, thus the temperature through the
+luminosity. The results are shown in Figure \refig{smallZ}.
+%
+\begin{figure}[htpb]
+	\begin{subfigure}{0.49\textwidth}
+		\includegraphics[width=\linewidth]{figures/position_smallZ.eps}
+		\caption{Position}
+		\label{fig:position_smallZ}
+	\end{subfigure}\hfill
+	\begin{subfigure}{0.49\textwidth}
+		\includegraphics[width=\linewidth]{figures/pressure_smallZ.eps}
+		\caption{Pressure}
+		\label{fig:pressure_smallZ}
+	\end{subfigure}\hfill
+	\vspace{0.35cm}
+	\begin{subfigure}{0.49\textwidth}
+		\includegraphics[width=\linewidth]{figures/luminosity_smallZ.eps}
+		\caption{Luminosity}
+		\label{fig:luminosity_smallZ}
+	\end{subfigure}\hfill
+	\begin{subfigure}{0.49\textwidth}
+		\includegraphics[width=\linewidth]{figures/temperature_smallZ.eps}
+		\caption{Temperature}
+		\label{fig:temperature_smallZ}
+	\end{subfigure}
+	\vspace{0.2cm}
+	\caption{Integration results by using $Z_{^{7}\mathrm{Li}} = Z_{^{7}\mathrm{Be}}
+	= 10^{-13}$.}
+	\label{fig:smallZ}
+\end{figure}
+%
+We already see a change, especially in the luminosity and temperature. Figure
+\refig{luminosity_smallZ} now shows how the luminosity is close to constant to about
+$10$ \% of the initial mass. Then it suddenly dips exponentially, reaching zero value at
+about $82 \ \%$ of $M_0$. Again, the luminosity decreases much faster than the position and
+mass. Figure \refig{position_smallZ} shows the position to be near $80$ \% into the core.
+The temperature in Figure \refig{temperature_smallZ} shows a steadier increase to about
+$15 \times 10^6$ K, which sounds reasonable as we approach the core. However, we see an
+abrupt increase in the pressure. It rises higher than a factor of $10^5$ of the initial
+pressure. We increase the initial pressure to see if it stabilises our results further.
+
+\begin{figure}[htpb]
+	\begin{subfigure}{0.49\textwidth}
+		\includegraphics[width=\linewidth]{figures/position_T1e7_P1e16.eps}
+		\caption{Position}
+		\label{fig:position_T1e7_P1e16}
+	\end{subfigure}\hfill
+	\begin{subfigure}{0.49\textwidth}
+		\includegraphics[width=\linewidth]{figures/pressure_T1e7_P1e16.eps}
+		\caption{Pressure}
+		\label{fig:pressure_T1e7_P1e16}
+	\end{subfigure}\hfill
+	\vspace{0.35cm}
+	\begin{subfigure}{0.49\textwidth}
+		\includegraphics[width=\linewidth]{figures/luminosity_T1e7_P1e16.eps}
+		\caption{Luminosity}
+		\label{fig:luminosity_T1e7_P1e16}
+	\end{subfigure}\hfill
+	\begin{subfigure}{0.49\textwidth}
+		\includegraphics[width=\linewidth]{figures/temperature_T1e7_P1e16.eps}
+		\caption{Temperature}
+		\label{fig:temperature_T1e7_P1e16}
+	\end{subfigure}
+	\vspace{0.2cm}
+	\caption{Integration results by increasing both the initial pressure and temperature.}
+	\label{fig:T1e7_P1e16}
+\end{figure}
+
+\subsection{Increasing initial temperature and pressure}
+Increasing the pressure by a factor $10^4$ of the original value, and the temperature by a
+factor of $10^2$, yields Figure \refig{T1e7_P1e16}. We immediately notice that this time,
+it is the mass $m$ that reaches zero. However, the luminosity and position stop at
+$73 \ \%$ and $55 \ \%$, respectively. We also notice from Figure
+\refig{temperature_T1e7_P1e16} that the temperature now increases faster towards the end,
+instead of in the beginning as we have had until now. This is probably more likely than
+the latter. This is the closest I have gotten to having the position, luminosity and mass
+reach zero values simultaneously. There might be a combination of $\rho_0, P_0, T_0$ that
+makes this possible, but I have not found it.
+
+\subsection{Density and energy generation}
+It could be interesting to see how the density and energy generation behave for a given
+set of initial values. We continue with the most recent initial values and have Figure
+\refig{density_epsilon}.
+%
+\begin{figure}[htpb]
+	\centering
+	\begin{subfigure}{0.49\textwidth}
+		\includegraphics[width=\linewidth]{figures/density_T1e7_P1e16.eps}
+		\caption{Density}
+		\label{fig:density_T1e7_P1e16}
+	\end{subfigure}\hfill
+	\begin{subfigure}{0.49\textwidth}
+		\includegraphics[width=\linewidth]{figures/energy_T1e7_P1e16.eps}
+		\caption{Energy generation per mass}
+		\label{fig:epsilon_T1e7_P1e16}
+	\end{subfigure}
+	\vspace{0.2cm}
+	\caption{Figures that show how the density and energy generation behave as function of
+		mass, given the same initial conditions as in Figure \refig{T1e7_P1e16}.}
+	\label{fig:density_epsilon}
+\end{figure}
+%
+We see that the density increases by a factor of 1.5. What is noticable however, is it how
+it decreases again towards the end, making it have the same value for different masses.
+This does not represent the physical situation, as the density should increase with
+increasing pressure and temperature without dropping again. We see the energy generation
+starts at a low value, but gradually increases as the temperature increases towards the core.
+This makes sense as it is strongly dependent on the temperature and density, where both
+increase towards the center.
+
+\newpage
+\section{The code}
+\lstinputlisting[caption=The program that solves the problem., style=customasm]{../solarCore.py}
 
 \begin{thebibliography}{9}
 		\bibitem{stix} 
@@ -263,6 +526,7 @@ integration scheme as numerical integration method.
 		2014.
 
 \end{thebibliography}
+
 
 \end{document}
 
