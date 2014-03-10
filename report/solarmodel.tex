@@ -388,11 +388,53 @@ prevent the luminosity or temperature from increasing too quickly. However, this
 time consuming. I chose to adapt a very small (of order $10^{-10}$ of the initial mass)
 step in
 the beginning, while gradually increasing it as we work our way into the core. I noticed
-however that given some initial conditions, I could choose $\partial m$ to be as big as
-$1/100$ of the original mass, and still get identical results as I did in e.g. Figure
+however that given some initial conditions, I could choose $\partial m$ to be as large as
+$10^{-4}$ of the original mass, and still get identical results as I did in e.g. Figure
 \refig{T1e7_P1e16}. I can only draw the conclusion that $\partial m$ needs to be very
 small if we start with some physical parameters that are too low (or high) compared to
-others, as in the case with Figure \refig{temperature_1}.
+others, as in the case with Figure \refig{temperature_1}. In those cases it changes
+abruptly because of the equation of state, and hence we need a very small step so that it
+does not change too fast. Figure \refig{highdm_works} shows that choosing a much higher
+time step for some initial parameters yield the same results as Figure \refig{T1e7_P1e16}.
+The output in Table \reftab{highdm_fail} shows the sudden increase in temperature for the
+original initial conditions, that ultimately fails.
+%
+\begin{figure}[htpb]
+	\begin{subfigure}{0.49\textwidth}
+		\includegraphics[width=\linewidth]{figures/luminosity_T1e7_P1e16_highdm.eps}
+		\caption{Luminosity}
+		\label{fig:luminosity_T1e7_P1e16_highdm}
+	\end{subfigure}\hfill
+	\begin{subfigure}{0.49\textwidth}
+		\includegraphics[width=\linewidth]{figures/temperature_T1e7_P1e16_highdm.eps}
+		\caption{Temperature}
+		\label{fig:temperature_T1e7_P1e16_highdm}
+	\end{subfigure}
+	\vspace{0.2cm}
+	\caption{Solution for $P_0 = 10^{16}$ Ba, $\partial m$ starts at
+	$1.39 \times 10^{27}$ g. The amount of $^{7}\mathrm{Li}$ and $^{7}\mathrm{Be}$ are
+	different than in Figure \refig{init_results}. See Section 4.3. 
+	See Figure \refig{T1e7_P1e16} which yield the same result for much smaller $\partial m$.}
+	\label{fig:highdm_works}
+\end{figure}
+%
+\begin{table}
+	\centering
+	\begin{tabular*}{\textwidth}{p{3cm}@{\extracolsep{\fill}}p{1.7cm}p{1.7cm}p{1.7cm}p{1.7cm}p{1.7cm}p{1.7cm}}
+		\toprule
+		\toprule
+		Step number & $M/M_0$ & $r/R_0$ & $L/L_0$ & $\rho /
+		\rho_0$ & $P/P_0$ & $T/T_0$ \\
+		\midrule
+		1 & 0.9999 & 0.9999 & 1.0000 & 1.0000 & 1.0007 & 1429.6 \\
+		\bottomrule
+	\end{tabular*}
+	\caption{The initial results of $P_0 = 10^{12}$ Ba, $T_0 = 10^5$ K and $\partial m$
+	starting at $1.39 \times 10^{27}$ g. The program stops after this, as the temperature
+	has increased by a factor of $10^3$ already in the first step. Compare with Figure
+	\refig{init_results} that has the same initial values, but smaller $\partial m$.}
+	\label{tab:highdm_fail}
+\end{table}
 
 \subsection{Decreasing the amount of $^{7}\mathrm{Li}$ and $^{7}\mathrm{Be}$}
 
@@ -425,7 +467,7 @@ luminosity. The results are shown in Figure \refig{smallZ}.
 	\end{subfigure}
 	\vspace{0.2cm}
 	\caption{Integration results by using $Z_{^{7}\mathrm{Li}} = Z_{^{7}\mathrm{Be}}
-	= 10^{-13}$.}
+	= 10^{-13}$. Mass step $\partial m$ starts at $1.39 \times 10^{23}$ g.}
 	\label{fig:smallZ}
 \end{figure}
 %
@@ -438,7 +480,7 @@ The temperature in Figure \refig{temperature_smallZ} shows a steadier increase t
 $15 \times 10^6$ K, which sounds reasonable as we approach the core. However, we see an
 abrupt increase in the pressure. It rises higher than a factor of $10^5$ of the initial
 pressure. We increase the initial pressure to see if it stabilises our results further.
-
+%
 \begin{figure}[htpb]
 	\begin{subfigure}{0.49\textwidth}
 		\includegraphics[width=\linewidth]{figures/position_T1e7_P1e16.eps}
@@ -462,7 +504,8 @@ pressure. We increase the initial pressure to see if it stabilises our results f
 		\label{fig:temperature_T1e7_P1e16}
 	\end{subfigure}
 	\vspace{0.2cm}
-	\caption{Integration results by increasing both the initial pressure and temperature.}
+	\caption{Integration results by increasing both the initial pressure and temperature.
+		Mass step $\partial m$ starts at $1.39 \times 10^{23}$ g.}
 	\label{fig:T1e7_P1e16}
 \end{figure}
 
@@ -496,7 +539,8 @@ set of initial values. We continue with the most recent initial values and have 
 	\end{subfigure}
 	\vspace{0.2cm}
 	\caption{Figures that show how the density and energy generation behave as function of
-		mass, given the same initial conditions as in Figure \refig{T1e7_P1e16}.}
+		mass, given the same initial conditions as in Figure \refig{T1e7_P1e16}. Mass step
+		$\partial m$ starts at $ 1.39 \times 10^{23}$ g.}
 	\label{fig:density_epsilon}
 \end{figure}
 %
@@ -508,9 +552,11 @@ starts at a low value, but gradually increases as the temperature increases towa
 This makes sense as it is strongly dependent on the temperature and density, where both
 increase towards the center.
 
-\newpage
 \section{The code}
-\lstinputlisting[caption=The program that solves the problem., style=customasm]{../solarCore.py}
+I have provided the link to my GitHub repository below. The code can be found there.
+
+%\lstinputlisting[caption=The program that solves the problem., style=customasm]{../solarCore.py}
+\url{https://github.com/vedad/SolarCoreModel/blob/dev/solarCore.py}
 
 \begin{thebibliography}{9}
 		\bibitem{stix} 
