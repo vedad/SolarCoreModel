@@ -298,7 +298,7 @@ def plots():
 	fig_P = plt.figure()
 	ax_P = fig_P.add_subplot(111)
 
-	ax_P.set_title('Pressure, $P_0 = 10^{12}$ Ba')
+	ax_P.set_title('Pressure, $P_0 = 10^{16}$ Ba')
 	ax_P.set_xlabel('$m/M_0$')
 	ax_P.set_ylabel('$P/P_0$')
 	ax_P.plot(m[0:end]/M0,P[0:end]/P0)
@@ -320,7 +320,7 @@ def plots():
 	fig_T = plt.figure()
 	ax_T = fig_T.add_subplot(111)
 
-	ax_T.set_title('Temperature, $T_0 = 10^5$ K')
+	ax_T.set_title('Temperature, $T_0 = 10^7$ K')
 	ax_T.set_xlabel('$m/M_0$')
 	ax_T.set_ylabel('$T/T_0$')
 	ax_T.plot(m[0:end]/M0,T[0:end]/T0)
